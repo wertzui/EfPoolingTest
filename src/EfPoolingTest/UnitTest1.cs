@@ -29,6 +29,7 @@ namespace EfPoolingTest
             // we use that many entries to ensure that the results cannot be cached
             if (!hasEntries)
             {
+                Debug.WriteLine("Creating entries");
                 var entries = new List<MyTable>(batchsize);
                 for (int i = 0; i < count;)
                 {
@@ -43,6 +44,7 @@ namespace EfPoolingTest
                         context.AddRange(entries);
                         context.SaveChanges();
                     }
+                    Debug.WriteLine($"Created {i} / {count} entries.");
                 }
             }
         }
@@ -101,6 +103,22 @@ namespace EfPoolingTest
                 {
                     var myTable = context.Set<MyTable>().FirstOrDefaultAsync(m => m.Id == i).ConfigureAwait(true).GetAwaiter().GetResult();
                     Debug.WriteLine("NormalContextParallelAsyncConfigureAwaitTrue " + myTable.MyColumn);
+                }
+            });
+        }
+
+        [TestMethod]
+        public void NormalContextParallelAsyncCloseConnection()
+        {
+            // Connection count max = 100 - MaxPoolSize
+            // Throws System.InvalidOperationException Timeout expired.
+            Parallel.For(1, count + 1, i =>
+            {
+                using (var context = new MyContext())
+                {
+                    var myTable = context.Set<MyTable>().FirstOrDefaultAsync(m => m.Id == i).ConfigureAwait(false).GetAwaiter().GetResult();
+                    Debug.WriteLine("NormalContextParallelAsyncCloseConnection " + myTable.MyColumn);
+                    context.Database.CloseConnection();
                 }
             });
         }
