@@ -13,6 +13,7 @@ namespace EfPoolingTest
     {
         const int count = 1000000; // number of entries and test runs
         const int batchsize = 1000; // batch size for the initial insert
+        private HitCountTester hitCountTester;
 
         [ClassInitialize]
         public static void Init(TestContext _)
@@ -49,6 +50,19 @@ namespace EfPoolingTest
             }
         }
 
+        [TestInitialize]
+        public void TestInitialize()
+        {
+            hitCountTester = new HitCountTester();
+            hitCountTester.Start();
+        }
+
+        [TestCleanup]
+        public void TestCleanup()
+        {
+            hitCountTester.Stop();
+        }
+
         [TestMethod]
         public void NormalContext()
         {
@@ -59,6 +73,7 @@ namespace EfPoolingTest
                 {
                     var myTable = context.Set<MyTable>().FirstOrDefault(m => m.Id == i);
                     Debug.WriteLine("NormalContext " + myTable.MyColumn);
+                    hitCountTester.Hit();
                 }
             }
         }
@@ -72,7 +87,8 @@ namespace EfPoolingTest
                 using (var context = new MyContext())
                 {
                     var myTable = await context.Set<MyTable>().FirstOrDefaultAsync(m => m.Id == i).ConfigureAwait(false);
-                    Debug.WriteLine("NormalContextAsync " + myTable.MyColumn);
+                    //Debug.WriteLine("NormalContextAsync " + myTable.MyColumn);
+                    hitCountTester.Hit();
                 }
             }
         }
@@ -87,7 +103,8 @@ namespace EfPoolingTest
                 using (var context = new MyContext())
                 {
                     var myTable = context.Set<MyTable>().FirstOrDefaultAsync(m => m.Id == i).ConfigureAwait(false).GetAwaiter().GetResult();
-                    Debug.WriteLine("NormalContextParallelAsyncConfigureAwaitFalse " + myTable.MyColumn);
+                    //Debug.WriteLine("NormalContextParallelAsyncConfigureAwaitFalse " + myTable.MyColumn);
+                    hitCountTester.Hit();
                 }
             });
         }
@@ -102,7 +119,8 @@ namespace EfPoolingTest
                 using (var context = new MyContext())
                 {
                     var myTable = context.Set<MyTable>().FirstOrDefaultAsync(m => m.Id == i).ConfigureAwait(true).GetAwaiter().GetResult();
-                    Debug.WriteLine("NormalContextParallelAsyncConfigureAwaitTrue " + myTable.MyColumn);
+                    //Debug.WriteLine("NormalContextParallelAsyncConfigureAwaitTrue " + myTable.MyColumn);
+                    hitCountTester.Hit();
                 }
             });
         }
@@ -117,7 +135,8 @@ namespace EfPoolingTest
                 using (var context = new MyContext())
                 {
                     var myTable = context.Set<MyTable>().FirstOrDefaultAsync(m => m.Id == i).ConfigureAwait(false).GetAwaiter().GetResult();
-                    Debug.WriteLine("NormalContextParallelAsyncCloseConnection " + myTable.MyColumn);
+                    //Debug.WriteLine("NormalContextParallelAsyncCloseConnection " + myTable.MyColumn);
+                    hitCountTester.Hit();
                     context.Database.CloseConnection();
                 }
             });
@@ -132,7 +151,8 @@ namespace EfPoolingTest
                 using (var context = new MyContext())
                 {
                     var myTable = context.Set<MyTable>().FirstOrDefault(m => m.Id == i);
-                    Debug.WriteLine("NormalContextParallel " + myTable.MyColumn);
+                    //Debug.WriteLine("NormalContextParallel " + myTable.MyColumn);
+                    hitCountTester.Hit();
                 }
             });
         }

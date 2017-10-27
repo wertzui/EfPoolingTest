@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Data.SqlClient;
 
 namespace EfCoreLongStringTest
 {
@@ -15,5 +16,11 @@ namespace EfCoreLongStringTest
             }
             base.OnConfiguring(optionsBuilder);
         }
+
+        //public override void Dispose()
+        //{
+        //    SqlConnection.ClearPool((SqlConnection)Database.GetDbConnection());
+        //    base.Dispose();
+        //}
     }
 }
